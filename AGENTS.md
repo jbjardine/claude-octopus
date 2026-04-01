@@ -20,12 +20,13 @@ AI coding tools that support agent discovery (e.g., GitHub Copilot coding agent)
 
 ## Agent Definitions
 
-Agents are defined in two formats for cross-platform compatibility:
+Agents are defined in three formats for cross-platform compatibility:
 
 - **Claude Code**: `.claude/agents/*.md` — YAML frontmatter with Claude Code tool names
+- **Codex**: `.codex/agents/*.toml` — project-scoped Codex custom agents for native subagent workflows
 - **GitHub Copilot**: `.github/agents/*.agent.md` — YAML frontmatter with Copilot tool aliases
 
-Both formats describe the same 10 agents with platform-native tool mappings:
+These formats describe the same 10 core agents with platform-native tool mappings:
 
 | Claude Code Tool | Copilot Alias |
 |-----------------|---------------|
@@ -33,6 +34,8 @@ Both formats describe the same 10 agents with platform-native tool mappings:
 | Write, Edit | edit |
 | Bash | execute |
 | Grep, Glob | search |
+
+For Codex, the repo also provides `.codex/config.toml` agent defaults so Codex can spawn native subagents against these project-scoped agent definitions.
 
 ## MCP Integration
 

@@ -13,20 +13,30 @@ You are helping the user configure Claude Octopus, a multi-agent orchestration p
 ## Your Task
 
 1. **Auto-detect current setup:**
-   - Check which CLIs are installed (codex, gemini)
-   - Check which API keys are set (OPENAI_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY)
+   - Check which CLIs are installed (`codex`, `claude`, `gemini`)
+   - Check which API keys are set (`OPENAI_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `PERPLEXITY_API_KEY`)
    - Check authentication status for each provider
 
-2. **Gather missing information:**
+2. **Verify providers with real external calls:**
+   - Do not treat the current assistant runtime as proof that a provider works
+   - If running inside Codex, Claude must be verified via the external `claude` CLI
+   - If running inside Claude, Codex must be verified via the external `codex` CLI
+   - Prefer real smoke calls:
+     - `codex exec --skip-git-repo-check --ephemeral ...`
+     - `claude -p ...`
+     - `gemini -p ...`
+     - Perplexity via direct API request
+
+3. **Gather missing information:**
    - For missing API keys, provide clear instructions on where to get them
    - Use AskUserQuestion to ask about subscription tiers (if needed)
    - Ask about cost optimization preferences
 
-3. **Run the configuration:**
+4. **Run the configuration:**
    - Use the orchestrate.sh script with appropriate environment variables
    - Handle any errors gracefully
 
-4. **Show a summary:**
+5. **Show a summary:**
    - Display what was configured
    - Show the detected provider status
    - Provide next steps
@@ -47,6 +57,9 @@ This will show you:
 - Which providers are installed and authenticated
 - Current cost optimization strategy
 - Any missing dependencies
+
+Then verify the providers with real external calls instead of relying only on detection.
+Important: if the current agent is Codex, that does not count as a Codex verification; you still need to call `codex exec` explicitly. The same rule applies symmetrically to Claude.
 
 ### Step 2: Interactive Configuration (Phase 1)
 
@@ -83,6 +96,7 @@ After configuration, run status again and show the user:
 ## Important Notes
 
 - **Security:** Never log or display full API keys in output
+- **Provider verification:** "Available" or "verified" in a status table is not enough when the user asks for a real test. Run an external CLI/API call for each provider you claim is working.
 - **Phase 1 Limitation:** The current wizard uses `read -p` which doesn't work well in Claude Code's environment. Inform the user they may need to run it in their terminal.
 - **Phase 2 Coming:** Tell users that a fully automated configuration system is in development
 
