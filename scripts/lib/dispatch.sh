@@ -171,6 +171,43 @@ resolve_codex_native_agent_spec() {
     esac
 }
 
+codex_native_runtime_available() {
+    [[ "${OCTOPUS_HOST:-}" == "codex" ]]
+}
+
+resolve_codex_native_subagent_mode() {
+    local agent_type="$1"
+    local native_mode="${OCTOPUS_CODEX_NATIVE_SUBAGENTS:-auto}"
+
+    if [[ "$agent_type" != codex* || "$agent_type" == "codex-review" ]]; then
+        echo "disabled"
+        return 0
+    fi
+
+    case "$native_mode" in
+        off|false|0|disabled)
+            echo "disabled"
+            ;;
+        on|true|1|force|forced|native)
+            if codex_native_runtime_available; then
+                echo "host-native"
+            else
+                echo "bridge"
+            fi
+            ;;
+        auto|"")
+            if codex_native_runtime_available; then
+                echo "host-native"
+            else
+                echo "bridge"
+            fi
+            ;;
+        *)
+            echo "disabled"
+            ;;
+    esac
+}
+
 build_codex_native_subagent_prompt() {
     local spec="$1"
     local prompt="$2"
@@ -213,20 +250,17 @@ prepare_codex_native_prompt() {
     local prompt="${4:-}"
     local curated_hint="${5:-}"
 
-    local native_mode="${OCTOPUS_CODEX_NATIVE_SUBAGENTS:-auto}"
+    local native_mode=""
     local spec=""
 
+    native_mode=$(resolve_codex_native_subagent_mode "$agent_type")
+
     case "$native_mode" in
-        off|false|0|disabled)
+        disabled|host-native)
             echo "$prompt"
             return 0
             ;;
     esac
-
-    if [[ "$agent_type" != codex* || "$agent_type" == "codex-review" ]]; then
-        echo "$prompt"
-        return 0
-    fi
 
     spec=$(resolve_codex_native_agent_spec "$agent_type" "$role" "$phase" "$prompt" "$curated_hint") || true
     if [[ -z "$spec" ]]; then

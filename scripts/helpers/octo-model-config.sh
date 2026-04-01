@@ -36,6 +36,7 @@ usage() {
     echo ""
     echo "Environment Variables:"
     echo "  OCTOPUS_CODEX_MODEL         Override codex model (highest priority)"
+    echo "  OCTOPUS_CODEX_NATIVE_SUBAGENTS  Codex subagent mode: auto, on, off"
     echo "  OCTOPUS_GEMINI_MODEL        Override gemini model"
     echo "  OCTOPUS_COST_MODE           Set cost tier: budget, standard, premium"
     echo "  OCTOPUS_TRACE_MODELS=1      Debug model resolution precedence"

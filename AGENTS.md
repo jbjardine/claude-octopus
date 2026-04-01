@@ -35,7 +35,7 @@ These formats describe the same 10 core agents with platform-native tool mapping
 | Bash | execute |
 | Grep, Glob | search |
 
-For Codex, the repo also provides `.codex/config.toml` agent defaults so Codex can spawn native subagents against these project-scoped agent definitions.
+For Codex, the repo also provides `.codex/config.toml` agent defaults so Codex can spawn native subagents against these project-scoped agent definitions. In shell-driven workflows, `OCTOPUS_CODEX_NATIVE_SUBAGENTS=auto` stays conservative: native host sessions defer to Codex's own runtime behavior, while external CLI dispatch falls back to the existing bridge path.
 
 ## MCP Integration
 

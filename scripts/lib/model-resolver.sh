@@ -14,6 +14,15 @@ resolve_octopus_model() {
     local role="${4:-}"
     local config_file="${HOME}/.claude-octopus/config/providers.json"
     local resolved_model=""
+    local env_var="OCTOPUS_$(echo "$provider" | tr '[:lower:]' '[:upper:]' | tr '-' '_')_MODEL"
+
+    # Highest priority: explicit env override.
+    # This must beat any process/file cache so one-off workflow runs can safely
+    # override a stale cached model without manual cache surgery.
+    if [[ -n "${!env_var:-}" ]]; then
+        echo "${!env_var}"
+        return 0
+    fi
 
     # 0. Session Cache (v8.53.0)
     # Uses a process-local memory cache + optional file-based cache for cross-process speed
@@ -52,7 +61,6 @@ resolve_octopus_model() {
     [[ -n "$_trace" ]] && echo "[model-trace] Resolving: provider=$provider type=$agent_type phase=${phase:-<none>} role=${role:-<none>}" >&2
 
     # 1. Force/Session Overrides (Env vars)
-    local env_var="OCTOPUS_$(echo "$provider" | tr '[:lower:]' '[:upper:]' | tr '-' '_')_MODEL"
     if [[ -n "${!env_var:-}" ]]; then
         resolved_model="${!env_var}"
         [[ -n "$_trace" ]] && echo "[model-trace] Tier 1 (env $env_var): ${!env_var} ← SELECTED" >&2
@@ -217,4 +225,3 @@ validate_model_name() {
     
     return 0
 }
-
