@@ -15,6 +15,8 @@ SPAWN="$PROJECT_ROOT/scripts/lib/spawn.sh"
 SYNC="$PROJECT_ROOT/scripts/lib/agent-sync.sh"
 WORKFLOWS="$PROJECT_ROOT/scripts/lib/workflows.sh"
 CODEX_AGENTS_DIR="$PROJECT_ROOT/.codex/agents"
+CODEX_PLUGIN_MANIFEST="$PROJECT_ROOT/.codex-plugin/plugin.json"
+CODEX_SKILL_BUILD_SCRIPT="$PROJECT_ROOT/scripts/build-codex-skills.sh"
 
 test_suite "Codex Native Subagents"
 
@@ -121,6 +123,24 @@ test_project_codex_agents_exist() {
     fi
 }
 
+test_codex_plugin_targets_generated_skills() {
+    test_case "plugin: Codex manifest points at generated .codex skills"
+    if grep -q '"skills": "./.codex/skills/"' "$CODEX_PLUGIN_MANIFEST"; then
+        test_pass
+    else
+        test_fail "Expected .codex-plugin/plugin.json to target .codex/skills/"
+    fi
+}
+
+test_skill_build_preamble_mentions_native_subagents() {
+    test_case "build: Codex skill preamble documents native subagent preference"
+    if grep -q "prefer native subagents from \`.codex/agents/\\*\\.toml\`" "$CODEX_SKILL_BUILD_SCRIPT"; then
+        test_pass
+    else
+        test_fail "Expected build-codex-skills host preamble to mention .codex native subagents"
+    fi
+}
+
 test_preamble_allows_native_subagents
 test_dispatch_helpers_exist
 test_prepare_prompt_prefers_project_agent
@@ -128,5 +148,7 @@ test_prepare_prompt_skips_bridge_in_codex_host
 test_prepare_prompt_can_be_disabled
 test_all_dispatch_paths_use_prepare_helper
 test_project_codex_agents_exist
+test_codex_plugin_targets_generated_skills
+test_skill_build_preamble_mentions_native_subagents
 
 test_summary

@@ -111,7 +111,7 @@ extract_body() {
 
     while IFS= read -r line; do
         if [[ "$line" == "---" ]]; then
-            ((frontmatter_count++))
+            ((++frontmatter_count))
             if [[ $frontmatter_count -ge 2 ]]; then
                 past_frontmatter=true
                 continue
@@ -130,6 +130,8 @@ host_preamble() {
 
 > **Host: Codex CLI** — This skill was designed for Claude Code and adapted for Codex.
 > Cross-reference commands use `$` sigil in Codex (e.g., `$octo-auto` not `/octo:auto`).
+> Codex host sessions should prefer native subagents from `.codex/agents/*.toml` when the task calls for delegation.
+> Shell-driven Octopus dispatch may still use a bridge prompt as a fallback when Codex is invoked externally.
 > `orchestrate.sh` commands work identically via Bash tool on both hosts.
 
 PREAMBLE
@@ -168,7 +170,7 @@ main() {
         for pattern in $SKIP_PATTERNS; do
             if [[ "$basename" == $pattern ]]; then
                 $VERBOSE && echo "  SKIP: $basename (template)"
-                ((skipped++))
+                ((++skipped))
                 continue 2
             fi
         done
@@ -208,7 +210,7 @@ main() {
             extract_body "$file"
         } > "$skill_dir/SKILL.md"
 
-        ((count++))
+        ((++count))
         $VERBOSE && echo "  OK: $basename → .codex/skills/$codex_name/SKILL.md"
     done
 

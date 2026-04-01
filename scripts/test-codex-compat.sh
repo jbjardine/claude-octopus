@@ -128,6 +128,9 @@ test_cmd "all SKILL.md have description field" \
 test_cmd "all SKILL.md have host preamble" \
     "cd '$PLUGIN_ROOT' && for f in .codex/skills/*/SKILL.md; do grep -q 'Host: Codex CLI' \"\$f\" || exit 1; done"
 
+test_cmd "all SKILL.md mention native Codex subagents" \
+    "cd '$PLUGIN_ROOT' && for f in .codex/skills/*/SKILL.md; do grep -q 'prefer native subagents from \`.codex/agents/\\*\\.toml\`' \"\$f\" || exit 1; done"
+
 # Name length validation (max 64 chars)
 test_cmd "all skill names are 64 chars or less" \
     "cd '$PLUGIN_ROOT' && for f in .codex/skills/*/SKILL.md; do name=\$(head -5 \"\$f\" | grep '^name:' | sed 's/^name: *//'); [[ \${#name} -le 64 ]] || exit 1; done"
@@ -147,6 +150,10 @@ echo ""
 echo "--- 4. Host Detection (OCTOPUS_HOST) ---"
 
 ALL_SRC="$SCRIPT_DIR/orchestrate.sh $SCRIPT_DIR/lib/*.sh"
+
+test_output "Codex plugin manifest points at generated skills" \
+    "grep '\"skills\"' '$PLUGIN_ROOT/.codex-plugin/plugin.json'" \
+    '.codex/skills/'
 
 test_output "Codex host detected via CODEX_HOME" \
     "grep -l 'CODEX_HOME' $ALL_SRC | head -1 | xargs grep 'OCTOPUS_HOST.*codex'" \
