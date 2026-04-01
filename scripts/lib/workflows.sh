@@ -81,6 +81,12 @@ IMPORTANT: If you find yourself searching or grepping more than 3 times in a row
     # v8.10.0: Enforce context budget AFTER all injections
     enhanced_prompt=$(enforce_context_budget "$enhanced_prompt" "$role")
 
+    enhanced_prompt=$(prepare_codex_native_prompt "$agent_type" "$role" "$phase" "$enhanced_prompt" "${curated_name_early:-}")
+
+    if [[ "$agent_type" == codex* && "$agent_type" != "codex-review" ]]; then
+        enhanced_prompt="${CODEX_SUBAGENT_PREAMBLE}${enhanced_prompt}"
+    fi
+
     # Resolve model and command
     local model
     model=$(get_agent_model "$agent_type" "$phase" "$role")

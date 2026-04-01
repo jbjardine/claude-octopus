@@ -510,6 +510,8 @@ ${heuristic_ctx}"
             cmd_array+=(-p "")
         fi
 
+        enhanced_prompt=$(prepare_codex_native_prompt "$agent_type" "$role" "$phase" "$enhanced_prompt" "${curated_name_early:-}")
+
         # v9.2.2: Inject subagent preamble for Codex dispatches (Issue #176)
         if [[ "$agent_type" == codex* && "$agent_type" != "codex-review" ]]; then
             enhanced_prompt="${CODEX_SUBAGENT_PREAMBLE}${enhanced_prompt}"

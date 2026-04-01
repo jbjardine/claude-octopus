@@ -114,6 +114,129 @@ get_agent_command() {
     esac
 }
 
+# Resolve a project-scoped custom Codex agent file.
+# Returns the absolute path when .codex/agents/<name>.toml exists.
+codex_custom_agent_file() {
+    local agent_name="$1"
+    local project_root="${PROJECT_ROOT:-$PWD}"
+    local agent_file=""
+
+    [[ -z "$agent_name" ]] && return 1
+
+    agent_file="${project_root}/.codex/agents/${agent_name}.toml"
+    [[ -f "$agent_file" ]] || return 1
+
+    echo "$agent_file"
+}
+
+# Prefer project-scoped custom Codex agents, then fall back to a built-in native role.
+# Returns one of:
+#   custom:<agent-name>:<agent-file>
+#   builtin:<builtin-role>
+resolve_codex_native_agent_spec() {
+    local agent_type="$1"
+    local role="${2:-}"
+    local phase="${3:-}"
+    local prompt="${4:-}"
+    local curated_hint="${5:-}"
+
+    local candidate="$curated_hint"
+    local agent_file=""
+
+    [[ "$agent_type" != codex* || "$agent_type" == "codex-review" ]] && return 1
+
+    if [[ -z "$candidate" && "${SUPPORTS_AGENT_TYPE_ROUTING:-false}" == "true" ]]; then
+        candidate=$(select_curated_agent "$prompt" "$phase" 2>/dev/null) || true
+    fi
+
+    if [[ -z "$candidate" ]]; then
+        case "$role" in
+            architect|planner)             candidate="backend-architect" ;;
+            reviewer|verifier)             candidate="code-reviewer" ;;
+            developer|implementer)         candidate="tdd-orchestrator" ;;
+            researcher)                    candidate="docs-architect" ;;
+        esac
+    fi
+
+    if agent_file=$(codex_custom_agent_file "$candidate"); then
+        echo "custom:${candidate}:${agent_file}"
+        return 0
+    fi
+
+    case "$role" in
+        reviewer|verifier)                 echo "builtin:reviewer" ;;
+        architect|planner|researcher)      echo "builtin:explorer" ;;
+        developer|implementer)             echo "builtin:worker" ;;
+        *)                                 echo "builtin:default" ;;
+    esac
+}
+
+build_codex_native_subagent_prompt() {
+    local spec="$1"
+    local prompt="$2"
+    local kind=""
+    local name=""
+    local path=""
+    local instruction=""
+
+    IFS=':' read -r kind name path <<< "$spec"
+
+    case "$kind" in
+        custom)
+            instruction=$(cat <<EOF
+Before answering, use a native Codex subagent for the main work.
+
+Preferred native agent: project-scoped custom agent "$name" defined at "$path".
+Delegate the substantive work to that native Codex subagent, wait for it to finish, and then return the final answer yourself.
+If that custom agent cannot be spawned, fall back to the closest built-in native Codex subagent instead of skipping delegation.
+EOF
+)
+            ;;
+        builtin|*)
+            instruction=$(cat <<EOF
+Before answering, use a native Codex subagent for the main work.
+
+Preferred native agent role: "$name".
+Delegate the substantive work to that native Codex subagent, wait for it to finish, and then return the final answer yourself.
+EOF
+)
+            ;;
+    esac
+
+    printf '%s\n\n%s' "$instruction" "$prompt"
+}
+
+prepare_codex_native_prompt() {
+    local agent_type="$1"
+    local role="${2:-}"
+    local phase="${3:-}"
+    local prompt="${4:-}"
+    local curated_hint="${5:-}"
+
+    local native_mode="${OCTOPUS_CODEX_NATIVE_SUBAGENTS:-auto}"
+    local spec=""
+
+    case "$native_mode" in
+        off|false|0|disabled)
+            echo "$prompt"
+            return 0
+            ;;
+    esac
+
+    if [[ "$agent_type" != codex* || "$agent_type" == "codex-review" ]]; then
+        echo "$prompt"
+        return 0
+    fi
+
+    spec=$(resolve_codex_native_agent_spec "$agent_type" "$role" "$phase" "$prompt" "$curated_hint") || true
+    if [[ -z "$spec" ]]; then
+        echo "$prompt"
+        return 0
+    fi
+
+    build_codex_native_subagent_prompt "$spec" "$prompt"
+}
+
 # v9.3.0: Per-role context budget proportions
 # WHY: Prevents chatty agents from consuming all context while verifiers get starved
 get_role_budget_proportion() {

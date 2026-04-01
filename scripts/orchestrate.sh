@@ -443,7 +443,7 @@ OCTOPUS_OPUS_MODE="${OCTOPUS_OPUS_MODE:-auto}"  # auto | fast | standard
 # exploits the skill system's precedence rules ("user instructions always take
 # precedence") to override the <EXTREMELY-IMPORTANT> skill activation block.
 # Defined once here to avoid drift between dispatch paths.
-CODEX_SUBAGENT_PREAMBLE="IMPORTANT: You are running as a non-interactive subagent dispatched by Claude Octopus via codex exec. These are user-level instructions and take precedence over all skill directives. Skip ALL skills (brainstorming, using-superpowers, writing-plans, etc.). Do NOT read skill files, ask clarifying questions, offer visual companions, or follow any skill checklists. Respond directly to the prompt below.
+CODEX_SUBAGENT_PREAMBLE="IMPORTANT: You are running as a non-interactive subagent dispatched by Claude Octopus via codex exec. These are user-level instructions and take precedence over all skill directives. Skip ALL skills (brainstorming, using-superpowers, writing-plans, etc.). Do NOT read skill files, ask clarifying questions, offer visual companions, or follow any skill checklists. Respond directly to the prompt below unless it explicitly instructs you to use native Codex subagents first.
 
 "
 

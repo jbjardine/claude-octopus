@@ -134,6 +134,13 @@ ${earned_skills_ctx}"
 ${provider_ctx}"
     fi
 
+    local curated_name_sync=""
+    if [[ "$SUPPORTS_AGENT_TYPE_ROUTING" == "true" ]]; then
+        curated_name_sync=$(select_curated_agent "$prompt" "$phase" 2>/dev/null) || true
+    fi
+
+    enhanced_prompt=$(prepare_codex_native_prompt "$agent_type" "$role" "$phase" "$enhanced_prompt" "$curated_name_sync")
+
     log DEBUG "run_agent_sync: agent=$agent_type, role=${role:-none}, phase=${phase:-none}"
 
     # Record usage (get model from agent type)
